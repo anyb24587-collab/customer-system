@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>销售客户管理系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+.app-header {
+  background: linear-gradient(135deg, #1a3a6c 0%, #2a7fc9 100%);
+  color: white;
+  padding: 20px 16px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.app-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-subtitle {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.user-info {
+  font-size: 13px;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+.stat-card {
+  background: rgba(255,255,255,0.15);
+  padding: 10px 8px;
+  border-radius: 8px;
+  text-align: center;
+}
+.stat-num {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffd64a;
+}
+.stat-label {
+  font-size: 11px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+.tab-bar {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #e8e8e8;
+  position: sticky;
+  top: 130px;
+  z-index: 99;
+  overflow-x: auto;
+}
+.tab {
+  flex: 1;
+  min-width: 80px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.tab.active {
+  color: #1a3a6c;
+  font-weight: 600;
+  border-bottom-color: #2a7fc9;
+}
+.tab-count {
+  font-size: 11px;
+  background: #ff4d4f;
+  color: white;
+  border-radius: 8px;
+  padding: 1px 6px;
+  margin-left: 4px;
+}
+.tab.active .tab-count { background: #2a7fc9; }
+.content { padding: 12px; }
+.customer-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border-left: 4px solid #ddd;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.customer-card:active { transform: scale(0.99); }
+.customer-card.level-A { border-left-color: #e24b4a; }
+.customer-card.level-B { border-left-color: #ba7517; }
+.customer-card.level-C { border-left-color: #888; }
+.customer-card.lost { border-left-color: #534ab7; opacity: 0.7; }
+.customer-card.deal { border-left-color: #639922; background: #f7fbf2; }
+.card-row1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.customer-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  color: #666;
+}
+.tag.stage { background: #e6f1fb; color: #185fa5; }
+.tag.class-type { background: #fbeaf0; color: #72243e; }
+.tag.level-A { background: #fcebeb; color: #a32d2d; }
+.tag.level-B { background: #faeeda; color: #854f0b; }
+.tag.level-C { background: #f1efe8; color: #444; }
+.next-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e24b4a;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.next-time.future { color: #888; font-weight: 400; }
+.next-time.overdue { color: #ff4d4f; }
+.customer-info {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.next-action {
+  background: #fff8e1;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #5d4e00;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.next-action strong { color: #b25e00; }
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+.empty-text {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.empty-hint {
+  font-size: 12px;
+  color: #bbb;
+}
+.fab-group {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 200;
+  align-items: flex-end;
+}
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a3a6c 0%, #2a7fc9 100%);
+  color: white;
+  border: none;
+  font-size: 28px;
+  font-weight: 300;
+  box-shadow: 0 4px 16px rgba(26,58,108,0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fab:active { transform: scale(0.95); }
+.fab-quick {
+  width: auto;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #e24b4a 0%, #ff6b6a 100%);
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(226,75,74,0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.fab-quick:active { transform: scale(0.95); }
+.fab-label {
+  position: absolute;
+  right: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  animation: pulse 3s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+.success-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 400;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.success-modal.show { display: flex; }
+.success-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  animation: bounceIn 0.4s;
+}
+@keyframes bounceIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.success-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+.success-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a3a6c;
+  margin-bottom: 4px;
+}
+.success-sub {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+.success-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.success-btn {
+  padding: 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.success-btn-primary {
+  background: linear-gradient(135deg, #e24b4a 0%, #ff6b6a 100%);
+  color: white;
+}
+.success-btn-secondary {
+  background: #f0f0f0;
+  color: #666;
+}
+.mode-switch {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 0;
+  margin-bottom: -4px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1.5px solid #e8e8e8;
+  background: white;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #888;
+}
+.mode-btn.active {
+  border-color: #2a7fc9;
+  background: #e6f1fb;
+  color: #185fa5;
+  font-weight: 600;
+}
+.quick-mode-hint {
+  background: #fff8e1;
+  padding: 10px 14px;
+  margin: 12px 16px 0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #856404;
+  border-left: 3px solid #ffc107;
+}
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal.show { display: flex; }
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  border-radius: 16px 16px 0 0;
+  overflow-y: auto;
+}
+.modal-header {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #888;
+  padding: 0 8px;
+}
+.form-body { padding: 16px; }
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #333;
+}
+.form-label .required { color: #e24b4a; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: #2a7fc9;
+}
+.form-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.level-options, .stage-quick {
+  display: grid;
+  gap: 8px;
+}
+.level-options { grid-template-columns: repeat(3, 1fr); }
+.stage-quick { grid-template-columns: repeat(2, 1fr); }
+.option-btn {
+  padding: 10px 8px;
+  border: 1.5px solid #d9d9d9;
+  border-radius: 8px;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.option-btn.selected {
+  border-color: #2a7fc9;
+  background: #e6f1fb;
+  color: #185fa5;
+  font-weight: 600;
+}
+.option-btn.A.selected { border-color: #e24b4a; background: #fcebeb; color: #a32d2d; }
+.option-btn.B.selected { border-color: #ba7517; background: #faeeda; color: #854f0b; }
+.option-btn.C.selected { border-color: #888; background: #f1efe8; color: #444; }
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+  position: sticky;
+  bottom: 0;
+  background: white;
+}
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #1a3a6c 0%, #2a7fc9 100%);
+  color: white;
+}
+.btn-secondary {
+  background: #f0f0f0;
+  color: #666;
+}
+.btn-danger { background: #fff1f0; color: #cf1322; }
+.detail-section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+.detail-label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+.detail-value {
+  font-size: 14px;
+  color: #1a1a1a;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+.quick-action-btn {
+  padding: 10px 4px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 500;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+.search-bar {
+  padding: 8px 12px;
+  background: white;
+  border-bottom: 1px solid #eee;
+}
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.export-section {
+  padding: 16px;
+  background: white;
+  margin: 12px;
+  border-radius: 12px;
+}
+.export-section h3 {
+  font-size: 15px;
+  margin-bottom: 12px;
+  color: #1a3a6c;
+}
+.export-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (min-width: 768px) {
+  body { padding: 0 0 80px; }
+  .app-header, .tab-bar { max-width: 100%; }
+  .content { max-width: 900px; margin: 0 auto; }
+  .stats-bar { max-width: 900px; margin: 14px auto 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">
+    <span>📊 销售客户管理系统</span>
+    <span class="user-info" onclick="changeUser()">👤 <span id="currentUser">未设置</span></span>
+  </div>
+  <div class="app-subtitle" id="currentDate"></div>
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-num" id="todayCount">0</div>
+      <div class="stat-label">今日必追</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="activeCount">0</div>
+      <div class="stat-label">跟进中</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="dealCount">0</div>
+      <div class="stat-label">本月成交</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="totalCount">0</div>
+      <div class="stat-label">客户总数</div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" data-tab="today" onclick="switchTab('today')">
+    🔥 今日必追<span class="tab-count" id="cnt-today">0</span>
+  </div>
+  <div class="tab" data-tab="active" onclick="switchTab('active')">
+    📋 全部跟进<span class="tab-count" id="cnt-active">0</span>
+  </div>
+  <div class="tab" data-tab="deal" onclick="switchTab('deal')">
+    ✅ 已成交<span class="tab-count" id="cnt-deal">0</span>
+  </div>
+  <div class="tab" data-tab="lost" onclick="switchTab('lost')">
+    ⚫ 战败池<span class="tab-count" id="cnt-lost">0</span>
+  </div>
+  <div class="tab" data-tab="settings" onclick="switchTab('settings')">
+    ⚙️ 设置
+  </div>
+</div>
+
+<div class="search-bar" id="searchBar">
+  <input type="text" class="search-input" placeholder="🔍 搜索客户昵称/微信号/地区" oninput="searchCustomers(this.value)">
+</div>
+
+<div class="content" id="content"></div>
+
+<div class="fab-group">
+  <button class="fab-quick" onclick="openQuickAddModal()" title="超快录入">
+    ⚡ 聊完即录
+  </button>
+  <button class="fab" onclick="openAddModal()" title="完整录入">+</button>
+</div>
+
+<div class="modal" id="formModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">新增客户</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="mode-switch" id="modeSwitch">
+      <button class="mode-btn active" id="modeQuick" onclick="switchMode('quick')">⚡ 超快模式 (5字段)</button>
+      <button class="mode-btn" id="modeFull" onclick="switchMode('full')">📝 完整模式 (12字段)</button>
+    </div>
+
+    <div class="quick-mode-hint" id="quickHint">
+      💡 超快模式只填5个核心字段,30秒搞定。详情可以稍后补
+    </div>
+    <div class="form-body">
+      <input type="hidden" id="customerId">
+
+      <div class="form-group">
+        <label class="form-label">客户昵称 <span class="required">*</span></label>
+        <input type="text" class="form-input" id="f_name" placeholder="客户微信昵称或姓名">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">微信号 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="f_wechat" placeholder="客户微信号">
+        </div>
+        <div class="form-group" id="f_phone_group">
+          <label class="form-label">手机号</label>
+          <input type="tel" class="form-input" id="f_phone" placeholder="选填">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">所在地区 <span class="required">*</span></label>
+        <input type="text" class="form-input" id="f_area" placeholder="如:河北石家庄">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">客户画像 <span class="required">*</span></label>
+        <select class="form-select" id="f_profile">
+          <option value="">请选择...</option>
+          <option value="①考证人群">① 考证人群(转行/落户/职称)</option>
+          <option value="②加分跳槽">② 在做跨境想考证加分</option>
+          <option value="③想做店铺">③ 想自己做跨境店铺</option>
+          <option value="④企业出海">④ 企业品牌出海</option>
+          <option value="⑤暂未明确">⑤ 暂未明确</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="f_class_group">
+        <label class="form-label">推荐班型</label>
+        <select class="form-select" id="f_class">
+          <option value="">请选择...</option>
+          <option value="特训班(¥6,980)">特训班 (¥6,980)</option>
+          <option value="孵化班(¥19,800)">孵化班 (¥19,800)</option>
+          <option value="创业班(¥39,800)">创业班 (¥39,800)</option>
+          <option value="入企班(¥69,800)">入企班 (¥69,800)</option>
+          <option value="待定">待定</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">跟进阶段 <span class="required">*</span></label>
+        <select class="form-select" id="f_stage">
+          <option value="①新接触">① 新接触</option>
+          <option value="②资格确认">② 资格确认</option>
+          <option value="③班型推荐">③ 班型推荐</option>
+          <option value="④已报价">④ 已报价</option>
+          <option value="⑤已提材料未付款">⑤ 已提材料未付款</option>
+          <option value="⑥已成交">⑥ 已成交 ✅</option>
+          <option value="⑦战败">⑦ 战败 ❌</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">意向等级 <span class="required">*</span></label>
+        <div class="level-options">
+          <div class="option-btn A" data-level="A" onclick="selectLevel('A')">🔥 A级</div>
+          <div class="option-btn B" data-level="B" onclick="selectLevel('B')">🟡 B级</div>
+          <div class="option-btn C" data-level="C" onclick="selectLevel('C')">⚪ C级</div>
+        </div>
+        <input type="hidden" id="f_level">
+      </div>
+
+      <div class="form-group" id="f_concern_group">
+        <label class="form-label">客户核心顾虑</label>
+        <textarea class="form-textarea" id="f_concern" placeholder="客户犹豫的真正原因 不超过50字"></textarea>
+      </div>
+
+      <div class="form-group" id="f_lastTalk_group">
+        <label class="form-label">最近一次沟通</label>
+        <textarea class="form-textarea" id="f_lastTalk" placeholder="日期+做了什么+客户反应"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">下次跟进时间 <span class="required">*</span></label>
+        <input type="datetime-local" class="form-input" id="f_nextTime">
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <button type="button" class="quick-action-btn" style="flex:0 0 auto;padding:6px 12px" onclick="setQuickTime(2)">2小时后</button>
+          <button type="button" class="quick-action-btn" style="flex:0 0 auto;padding:6px 12px" onclick="setQuickTime('tonight')">今晚8点</button>
+          <button type="button" class="quick-action-btn" style="flex:0 0 auto;padding:6px 12px" onclick="setQuickTime('tomorrow')">明天10点</button>
+          <button type="button" class="quick-action-btn" style="flex:0 0 auto;padding:6px 12px" onclick="setQuickTime(3)">3天后</button>
+          <button type="button" class="quick-action-btn" style="flex:0 0 auto;padding:6px 12px" onclick="setQuickTime(7)">1周后</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">下次跟进动作 <span class="required">*</span></label>
+        <textarea class="form-textarea" id="f_nextAction" placeholder="下次要说什么/做什么 不超过30字"></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="deleteBtn" onclick="deleteCustomer()" style="display:none;flex:0 0 auto">删除</button>
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveCustomer()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="detailModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">客户详情</div>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="form-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDetailModal()">关闭</button>
+      <button class="btn btn-primary" onclick="editCurrent()">✏️ 编辑</button>
+    </div>
+  </div>
+</div>
+
+<div class="success-modal" id="successModal">
+  <div class="success-card">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">客户已录入!</div>
+    <div class="success-sub" id="successSub">还要继续录入下一个客户吗?</div>
+    <div class="success-actions">
+      <button class="success-btn success-btn-secondary" onclick="closeSuccessModal()">先休息一下</button>
+      <button class="success-btn success-btn-primary" onclick="continueAdd()">⚡ 继续录入</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ 数据管理 ============
+let customers = [];
+let currentTab = 'today';
+let currentUser = '';
+let currentDetailId = null;
+let editingId = null;
+let searchKeyword = '';
+
+let isQuickMode = true; // 默认超快模式
+
+// 切换录入模式
+function switchMode(mode) {
+  isQuickMode = (mode === 'quick');
+  document.getElementById('modeQuick').classList.toggle('active', isQuickMode);
+  document.getElementById('modeFull').classList.toggle('active', !isQuickMode);
+  document.getElementById('quickHint').style.display = isQuickMode ? 'block' : 'none';
+
+  // 控制非核心字段显示
+  const optionalFields = ['f_phone_group','f_class_group','f_concern_group','f_lastTalk_group'];
+  optionalFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isQuickMode ? 'none' : 'block';
+  });
+
+  // 超快模式默认值
+  if (isQuickMode) {
+    if (!document.getElementById('f_stage').value) {
+      document.getElementById('f_stage').value = '①新接触';
+    }
+  }
+}
+
+// 超快录入入口
+function openQuickAddModal() {
+  openAddModal();
+  switchMode('quick');
+}
+
+// 关闭成功弹窗
+function closeSuccessModal() {
+  document.getElementById('successModal').classList.remove('show');
+}
+
+// 继续录入下一个
+function continueAdd() {
+  closeSuccessModal();
+  openQuickAddModal();
+}
+
+// 显示成功弹窗
+function showSuccessModal() {
+  document.getElementById('successSub').textContent =
+    `刚刚录入了${customers.length}号客户·还要继续录下一个吗?`;
+  document.getElementById('successModal').classList.add('show');
+}
+
+// 初始化
+async function init() {
+  showCurrentDate();
+  await loadUser();
+  await loadCustomers();
+  render();
+}
+
+function showCurrentDate() {
+  const now = new Date();
+  const weekDays = ['日','一','二','三','四','五','六'];
+  const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 周${weekDays[now.getDay()]}`;
+  document.getElementById('currentDate').textContent = dateStr;
+}
+
+async function loadUser() {
+  try {
+    const r = await window.storage.get('user_name');
+    currentUser = r ? r.value : '';
+  } catch (e) {
+    currentUser = '';
+  }
+  if (!currentUser) {
+    currentUser = prompt('请输入你的姓名(用于区分员工):', '') || '销售员';
+    try { await window.storage.set('user_name', currentUser); } catch(e){}
+  }
+  document.getElementById('currentUser').textContent = currentUser;
+}
+
+async function changeUser() {
+  const newName = prompt('修改你的姓名:', currentUser);
+  if (newName && newName.trim()) {
+    currentUser = newName.trim();
+    try { await window.storage.set('user_name', currentUser); } catch(e){}
+    document.getElementById('currentUser').textContent = currentUser;
+    toast('已切换到 ' + currentUser);
+  }
+}
+
+async function loadCustomers() {
+  try {
+    const r = await window.storage.get('customers_data');
+    customers = r ? JSON.parse(r.value) : [];
+  } catch (e) {
+    customers = [];
+  }
+}
+
+async function saveCustomers() {
+  try {
+    await window.storage.set('customers_data', JSON.stringify(customers));
+  } catch (e) {
+    toast('保存失败，请重试');
+  }
+}
+
+// ============ 渲染 ============
+function render() {
+  updateStats();
+  if (currentTab === 'settings') {
+    renderSettings();
+    document.getElementById('searchBar').style.display = 'none';
+  } else {
+    renderList();
+    document.getElementById('searchBar').style.display = 'block';
+  }
+}
+
+function updateStats() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today.getTime() + 24*3600*1000);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const todayList = customers.filter(c =>
+    c.nextTime && new Date(c.nextTime) < tomorrow &&
+    !['⑥已成交','⑦战败'].includes(c.stage)
+  );
+  const activeList = customers.filter(c =>
+    !['⑥已成交','⑦战败'].includes(c.stage)
+  );
+  const dealList = customers.filter(c =>
+    c.stage === '⑥已成交' && c.dealTime && new Date(c.dealTime) >= monthStart
+  );
+
+  document.getElementById('todayCount').textContent = todayList.length;
+  document.getElementById('activeCount').textContent = activeList.length;
+  document.getElementById('dealCount').textContent = dealList.length;
+  document.getElementById('totalCount').textContent = customers.length;
+
+  document.getElementById('cnt-today').textContent = todayList.length;
+  document.getElementById('cnt-active').textContent = activeList.length;
+  document.getElementById('cnt-deal').textContent = customers.filter(c => c.stage === '⑥已成交').length;
+  document.getElementById('cnt-lost').textContent = customers.filter(c => c.stage === '⑦战败').length;
+}
+
+function renderList() {
+  const content = document.getElementById('content');
+  const now = new Date();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+  let list = [];
+  if (currentTab === 'today') {
+    list = customers.filter(c =>
+      c.nextTime && new Date(c.nextTime) < tomorrow &&
+      !['⑥已成交','⑦战败'].includes(c.stage)
+    );
+  } else if (currentTab === 'active') {
+    list = customers.filter(c => !['⑥已成交','⑦战败'].includes(c.stage));
+  } else if (currentTab === 'deal') {
+    list = customers.filter(c => c.stage === '⑥已成交');
+  } else if (currentTab === 'lost') {
+    list = customers.filter(c => c.stage === '⑦战败');
+  }
+
+  // 搜索过滤
+  if (searchKeyword) {
+    const kw = searchKeyword.toLowerCase();
+    list = list.filter(c =>
+      (c.name||'').toLowerCase().includes(kw) ||
+      (c.wechat||'').toLowerCase().includes(kw) ||
+      (c.area||'').toLowerCase().includes(kw) ||
+      (c.phone||'').includes(kw)
+    );
+  }
+
+  // 排序: 按意向等级 + 跟进时间
+  const levelOrder = {A:1, B:2, C:3};
+  list.sort((a,b) => {
+    const la = levelOrder[a.level] || 9;
+    const lb = levelOrder[b.level] || 9;
+    if (la !== lb) return la - lb;
+    if (a.nextTime && b.nextTime) {
+      return new Date(a.nextTime) - new Date(b.nextTime);
+    }
+    return 0;
+  });
+
+  if (list.length === 0) {
+    content.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-text">${currentTab === 'today' ? '今天没有需要跟进的客户' : '暂无客户'}</div>
+      <div class="empty-hint">点击右下角"+"添加新客户</div>
+    </div>`;
+    return;
+  }
+
+  content.innerHTML = list.map(c => renderCard(c)).join('');
+}
+
+function renderCard(c) {
+  const levelClass = c.stage === '⑦战败' ? 'lost' :
+                      c.stage === '⑥已成交' ? 'deal' :
+                      'level-' + (c.level || 'C');
+  const nextTimeStr = formatNextTime(c.nextTime);
+  const tags = [];
+  if (c.stage) tags.push(`<span class="tag stage">${c.stage}</span>`);
+  if (c.recommendedClass) tags.push(`<span class="tag class-type">${c.recommendedClass}</span>`);
+  if (c.level && !['⑥已成交','⑦战败'].includes(c.stage)) tags.push(`<span class="tag level-${c.level}">${levelEmoji(c.level)}${c.level}级</span>`);
+
+  return `<div class="customer-card ${levelClass}" onclick="openDetail('${c.id}')">
+    <div class="card-row1">
+      <div>
+        <div class="customer-name">${c.name || '未命名'}</div>
+        <div class="tags">${tags.join('')}</div>
+      </div>
+      ${c.nextTime && !['⑥已成交','⑦战败'].includes(c.stage) ? `<div class="next-time ${nextTimeStr.cls}">${nextTimeStr.text}</div>` : ''}
+    </div>
+    <div class="customer-info">📍 ${c.area || '未填'} · ${c.profile || ''}</div>
+    ${c.concern ? `<div class="customer-info">💭 ${c.concern}</div>` : ''}
+    ${c.nextAction && !['⑥已成交','⑦战败'].includes(c.stage) ? `<div class="next-action">📝 <strong>下次:</strong> ${c.nextAction}</div>` : ''}
+  </div>`;
+}
+
+function formatNextTime(timeStr) {
+  if (!timeStr) return {text: '未设置', cls: 'future'};
+  const t = new Date(timeStr);
+  const now = new Date();
+  const diff = t - now;
+  const hours = diff / 3600000;
+
+  if (diff < 0) return {text: '已逾期', cls: 'overdue'};
+  if (hours < 24) {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (t < new Date(today.getTime() + 24*3600*1000)) {
+      return {text: `今天 ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`, cls: ''};
+    }
+  }
+  if (hours < 48) {
+    return {text: `明天 ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`, cls: 'future'};
+  }
+  return {text: `${t.getMonth()+1}/${t.getDate()} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`, cls: 'future'};
+}
+
+function levelEmoji(l) {
+  return l === 'A' ? '🔥' : l === 'B' ? '🟡' : '⚪';
+}
+
+// ============ 操作 ============
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  searchKeyword = '';
+  const searchInput = document.querySelector('.search-input');
+  if (searchInput) searchInput.value = '';
+  render();
+}
+
+function searchCustomers(kw) {
+  searchKeyword = kw.trim();
+  renderList();
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '新增客户';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('modeSwitch').style.display = 'flex';
+  document.getElementById('customerId').value = '';
+  ['f_name','f_wechat','f_phone','f_area','f_profile','f_class','f_concern','f_lastTalk','f_nextAction'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f_stage').value = '①新接触';
+  document.getElementById('f_level').value = '';
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  // 默认下次跟进时间:明天上午10点
+  setQuickTime('tomorrow');
+  // 默认进入超快模式
+  switchMode('quick');
+  document.getElementById('formModal').classList.add('show');
+  // 自动聚焦到第一个字段
+  setTimeout(() => document.getElementById('f_name').focus(), 300);
+}
+
+function selectLevel(level) {
+  document.getElementById('f_level').value = level;
+  document.querySelectorAll('.option-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.level === level);
+  });
+}
+
+function setQuickTime(opt) {
+  const now = new Date();
+  let target;
+  if (opt === 'tonight') {
+    target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0);
+    if (target < now) target.setDate(target.getDate() + 1);
+  } else if (opt === 'tomorrow') {
+    target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 10, 0);
+  } else if (typeof opt === 'number') {
+    if (opt < 24) {
+      target = new Date(now.getTime() + opt * 3600000);
+    } else {
+      target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + opt, 10, 0);
+    }
+  }
+  // 转换为 datetime-local 格式
+  const offset = target.getTimezoneOffset();
+  const local = new Date(target.getTime() - offset * 60000);
+  document.getElementById('f_nextTime').value = local.toISOString().slice(0,16);
+}
+
+async function saveCustomer() {
+  const name = document.getElementById('f_name').value.trim();
+  const wechat = document.getElementById('f_wechat').value.trim();
+  const area = document.getElementById('f_area').value.trim();
+  const profile = document.getElementById('f_profile').value;
+  const stage = document.getElementById('f_stage').value;
+  const level = document.getElementById('f_level').value;
+  const nextTime = document.getElementById('f_nextTime').value;
+  const nextAction = document.getElementById('f_nextAction').value.trim();
+
+  // 必填校验
+  if (!name) return toast('请填写客户昵称');
+  if (!wechat) return toast('请填写微信号');
+  if (!area) return toast('请填写所在地区');
+  if (!profile) return toast('请选择客户画像');
+  if (!level) return toast('请选择意向等级');
+  if (!['⑥已成交','⑦战败'].includes(stage) && !nextTime) return toast('请设置下次跟进时间');
+  if (!['⑥已成交','⑦战败'].includes(stage) && !nextAction) return toast('请填写下次跟进动作');
+
+  const data = {
+    id: editingId || 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    name, wechat,
+    phone: document.getElementById('f_phone').value.trim(),
+    area, profile,
+    recommendedClass: document.getElementById('f_class').value,
+    stage, level,
+    concern: document.getElementById('f_concern').value.trim(),
+    lastTalk: document.getElementById('f_lastTalk').value.trim(),
+    nextTime, nextAction,
+    owner: currentUser,
+    updateTime: new Date().toISOString()
+  };
+
+  if (editingId) {
+    const idx = customers.findIndex(c => c.id === editingId);
+    if (idx >= 0) {
+      // 保留原创建时间和成交时间
+      data.createTime = customers[idx].createTime;
+      data.dealTime = customers[idx].dealTime;
+      if (stage === '⑥已成交' && !data.dealTime) {
+        data.dealTime = new Date().toISOString();
+      }
+      customers[idx] = data;
+    }
+  } else {
+    data.createTime = new Date().toISOString();
+    if (stage === '⑥已成交') {
+      data.dealTime = new Date().toISOString();
+    }
+    customers.push(data);
+  }
+
+  await saveCustomers();
+  closeModal();
+  render();
+  if (editingId) {
+    toast('已更新');
+  } else {
+    // 新增成功 弹出继续录入提示
+    showSuccessModal();
+  }
+}
+
+function closeModal() {
+  document.getElementById('formModal').classList.remove('show');
+}
+
+function openDetail(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  currentDetailId = id;
+
+  const body = document.getElementById('detailBody');
+  const sections = [
+    ['客户昵称', c.name],
+    ['微信号', c.wechat],
+    ['手机号', c.phone || '未填'],
+    ['所在地区', c.area],
+    ['客户画像', c.profile],
+    ['推荐班型', c.recommendedClass || '未定'],
+    ['跟进阶段', c.stage],
+    ['意向等级', c.level ? levelEmoji(c.level) + ' ' + c.level + '级' : '未设'],
+    ['客户核心顾虑', c.concern || '(无)'],
+    ['最近一次沟通', c.lastTalk || '(无)'],
+    ['下次跟进时间', c.nextTime ? new Date(c.nextTime).toLocaleString('zh-CN') : '未设'],
+    ['下次跟进动作', c.nextAction || '(无)'],
+    ['创建时间', c.createTime ? new Date(c.createTime).toLocaleString('zh-CN') : '-'],
+    ['最近更新', c.updateTime ? new Date(c.updateTime).toLocaleString('zh-CN') : '-'],
+  ];
+  body.innerHTML = sections.map(([l,v]) =>
+    `<div class="detail-section">
+      <div class="detail-label">${l}</div>
+      <div class="detail-value">${v}</div>
+    </div>`
+  ).join('') + `<div class="quick-actions">
+    <button class="quick-action-btn" onclick="quickUpdate('stage','⑥已成交')">✅ 标记成交</button>
+    <button class="quick-action-btn" onclick="quickUpdate('stage','⑦战败')">❌ 标记战败</button>
+    <button class="quick-action-btn" onclick="quickPostpone()">⏰ 顺延1天</button>
+  </div>`;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('show');
+  currentDetailId = null;
+}
+
+function editCurrent() {
+  if (!currentDetailId) return;
+  const c = customers.find(x => x.id === currentDetailId);
+  if (!c) return;
+
+  closeDetailModal();
+  editingId = c.id;
+  document.getElementById('modalTitle').textContent = '编辑客户';
+  document.getElementById('deleteBtn').style.display = 'block';
+  document.getElementById('modeSwitch').style.display = 'none';
+  document.getElementById('quickHint').style.display = 'none';
+  // 编辑时强制完整模式 显示所有字段
+  isQuickMode = false;
+  ['f_phone_group','f_class_group','f_concern_group','f_lastTalk_group'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  });
+  document.getElementById('customerId').value = c.id;
+  document.getElementById('f_name').value = c.name || '';
+  document.getElementById('f_wechat').value = c.wechat || '';
+  document.getElementById('f_phone').value = c.phone || '';
+  document.getElementById('f_area').value = c.area || '';
+  document.getElementById('f_profile').value = c.profile || '';
+  document.getElementById('f_class').value = c.recommendedClass || '';
+  document.getElementById('f_stage').value = c.stage || '①新接触';
+  document.getElementById('f_concern').value = c.concern || '';
+  document.getElementById('f_lastTalk').value = c.lastTalk || '';
+  document.getElementById('f_nextAction').value = c.nextAction || '';
+  if (c.nextTime) {
+    const t = new Date(c.nextTime);
+    const offset = t.getTimezoneOffset();
+    const local = new Date(t.getTime() - offset * 60000);
+    document.getElementById('f_nextTime').value = local.toISOString().slice(0,16);
+  } else {
+    document.getElementById('f_nextTime').value = '';
+  }
+  selectLevel(c.level || '');
+  document.getElementById('formModal').classList.add('show');
+}
+
+async function quickUpdate(field, value) {
+  if (!currentDetailId) return;
+  const c = customers.find(x => x.id === currentDetailId);
+  if (!c) return;
+  c[field] = value;
+  c.updateTime = new Date().toISOString();
+  if (field === 'stage' && value === '⑥已成交' && !c.dealTime) {
+    c.dealTime = new Date().toISOString();
+  }
+  if (field === 'stage' && value === '⑦战败') {
+    // 设置3个月后唤醒
+    const wakeup = new Date();
+    wakeup.setMonth(wakeup.getMonth() + 3);
+    c.nextTime = wakeup.toISOString();
+    c.nextAction = '3个月后重新触达,查看是否累积条件';
+  }
+  await saveCustomers();
+  closeDetailModal();
+  render();
+  toast('已更新');
+}
+
+async function quickPostpone() {
+  if (!currentDetailId) return;
+  const c = customers.find(x => x.id === currentDetailId);
+  if (!c || !c.nextTime) return;
+  const t = new Date(c.nextTime);
+  t.setDate(t.getDate() + 1);
+  c.nextTime = t.toISOString();
+  c.updateTime = new Date().toISOString();
+  await saveCustomers();
+  closeDetailModal();
+  render();
+  toast('已顺延1天');
+}
+
+async function deleteCustomer() {
+  if (!editingId) return;
+  if (!confirm('确认删除该客户?删除后无法恢复')) return;
+  customers = customers.filter(c => c.id !== editingId);
+  await saveCustomers();
+  closeModal();
+  render();
+  toast('已删除');
+}
+
+// ============ 设置页 ============
+function renderSettings() {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="export-section">
+      <h3>📤 数据导出</h3>
+      <div class="export-btns">
+        <button class="btn btn-primary" onclick="exportCSV()">导出 CSV</button>
+        <button class="btn btn-secondary" onclick="exportJSON()">备份 JSON</button>
+      </div>
+      <p style="font-size:12px;color:#888;margin-top:8px;line-height:1.6">
+        💡 CSV可用Excel/钉钉表格打开;JSON用于完整备份和恢复
+      </p>
+    </div>
+
+    <div class="export-section">
+      <h3>📥 数据导入</h3>
+      <input type="file" id="importFile" accept=".json" style="font-size:12px;width:100%" onchange="importJSON(event)">
+      <p style="font-size:12px;color:#888;margin-top:8px;line-height:1.6">
+        💡 上传之前备份的JSON文件可恢复数据
+      </p>
+    </div>
+
+    <div class="export-section">
+      <h3>👤 当前用户</h3>
+      <p style="font-size:14px;margin-bottom:8px">${currentUser}</p>
+      <button class="btn btn-secondary" onclick="changeUser()" style="font-size:13px">修改姓名</button>
+    </div>
+
+    <div class="export-section">
+      <h3>📊 数据统计</h3>
+      <div style="font-size:13px;color:#555;line-height:2">
+        <div>📝 客户总数: <strong>${customers.length}</strong></div>
+        <div>🔥 A级客户: <strong>${customers.filter(c=>c.level==='A'&&!['⑥已成交','⑦战败'].includes(c.stage)).length}</strong></div>
+        <div>🟡 B级客户: <strong>${customers.filter(c=>c.level==='B'&&!['⑥已成交','⑦战败'].includes(c.stage)).length}</strong></div>
+        <div>⚪ C级客户: <strong>${customers.filter(c=>c.level==='C'&&!['⑥已成交','⑦战败'].includes(c.stage)).length}</strong></div>
+        <div>✅ 累计成交: <strong>${customers.filter(c=>c.stage==='⑥已成交').length}</strong></div>
+        <div>❌ 累计战败: <strong>${customers.filter(c=>c.stage==='⑦战败').length}</strong></div>
+      </div>
+    </div>
+
+    <div class="export-section" style="border:1px solid #ffccc7;background:#fff2f0">
+      <h3 style="color:#cf1322">⚠️ 危险操作</h3>
+      <button class="btn btn-danger" onclick="clearAllData()">清空所有数据</button>
+      <p style="font-size:12px;color:#cf1322;margin-top:8px">慎用!建议清空前先导出备份</p>
+    </div>
+
+    <div class="export-section">
+      <h3>📖 使用说明</h3>
+      <div style="font-size:13px;color:#666;line-height:1.8">
+        <p><strong>🔥 今日必追:</strong> 显示今天前需要跟进的所有客户</p>
+        <p><strong>📋 全部跟进:</strong> 所有未成交、未战败的客户</p>
+        <p><strong>✅ 已成交:</strong> 已成交的客户记录</p>
+        <p><strong>⚫ 战败池:</strong> 战败客户,3个月后自动提醒重新触达</p>
+        <p><strong>💡 数据保存:</strong> 数据本地自动保存,建议每周导出CSV备份</p>
+      </div>
+    </div>
+  `;
+}
+
+function exportCSV() {
+  if (customers.length === 0) return toast('没有数据可导出');
+  const headers = ['客户昵称','微信号','手机号','所在地区','客户画像','推荐班型','跟进阶段','意向等级','核心顾虑','最近沟通','下次跟进时间','下次跟进动作','负责人','创建时间'];
+  const rows = customers.map(c => [
+    c.name||'', c.wechat||'', c.phone||'', c.area||'', c.profile||'',
+    c.recommendedClass||'', c.stage||'', c.level||'', c.concern||'',
+    c.lastTalk||'', c.nextTime||'', c.nextAction||'',
+    c.owner||'', c.createTime||''
+  ].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+  const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `客户数据_${currentUser}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV已导出');
+}
+
+function exportJSON() {
+  const data = {
+    exportTime: new Date().toISOString(),
+    user: currentUser,
+    customers: customers
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `客户备份_${currentUser}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('备份文件已下载');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.customers || !Array.isArray(data.customers)) {
+        return toast('文件格式错误');
+      }
+      if (!confirm(`将导入 ${data.customers.length} 条客户记录,会覆盖当前数据,确认?`)) return;
+      customers = data.customers;
+      await saveCustomers();
+      render();
+      toast('导入成功');
+    } catch (err) {
+      toast('导入失败:' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function clearAllData() {
+  if (!confirm('确定要清空所有客户数据吗?此操作不可恢复!')) return;
+  if (!confirm('再次确认:真的要清空所有数据吗?')) return;
+  customers = [];
+  await saveCustomers();
+  render();
+  toast('已清空');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// 启动
+init();
+</script>
+</body>
+</html>
